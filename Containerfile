@@ -10,7 +10,7 @@ ARG build_target=operator
 ARG deployment_base=registry.access.redhat.com/ubi9/ubi-minimal
 
 # Unified builder stage, compiles all binaries in a single cargo invocation.
-FROM registry.redhat.io/confidential-clusters-beta/buildroot-rhel9@sha256:84c4e5a2bb4f761d77dee1bc51894c1d43449b4f3d4b54f2fb784f90d3bc821f AS builder
+FROM quay.io/redhat-user-workloads/cocl-operator-tenant/buildroot@sha256:34806c0eb874b00bcd0fc90241746404e051070b278ac0351e5c8873ffda8b39 AS builder
 LABEL project=trusted-cluster-operator
 ARG build_type
 WORKDIR /build

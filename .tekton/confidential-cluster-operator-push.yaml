@@ -204,6 +204,8 @@ spec:
         value: $(params.output-image)
       - name: DOCKERFILE
         value: $(params.dockerfile)
+      - name: TARGET_STAGE
+        value: operator
       - name: CONTEXT
         value: $(params.path-context)
       - name: HERMETIC
@@ -422,6 +424,8 @@ spec:
         value: $(params.output-image)
       - name: DOCKERFILE
         value: $(params.dockerfile)
+      - name: TARGET_STAGE
+        value: operator
       - name: CONTEXT
         value: $(params.path-context)
       - name: HERMETIC
