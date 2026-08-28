@@ -4,7 +4,11 @@ include $(upstream)/Makefile
 # to avoid interpretation as argument delimiter
 comma := ,
 
-OPENSHIFT_API_DIR = $(shell go list -m -f '{{.Dir}}' github.com/openshift/api)
+# go list -m leaves .Dir empty until the module source is downloaded.
+OPENSHIFT_API_DIR := $(shell go mod download github.com/openshift/api && go list -m -f '{{.Dir}}' github.com/openshift/api)
+ifeq ($(strip $(OPENSHIFT_API_DIR)),)
+$(error could not locate github.com/openshift/api; check go mod download in tests/)
+endif
 OPENSHIFT_API_LOCAL = config/crd/openshift-api
 
 # Work around controller-gen rejecting invalid markers in openshift/api until
