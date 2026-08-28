@@ -9,6 +9,8 @@ ARG build_type=release
 ARG build_target=operator
 ARG deployment_base=registry.access.redhat.com/ubi9/ubi-minimal
 
+FROM quay.io/konflux-ci/operator-sdk-builder:latest AS operator-sdk
+
 # Unified builder stage, compiles all binaries in a single cargo invocation.
 FROM quay.io/redhat-user-workloads/cocl-operator-tenant/buildroot@sha256:34806c0eb874b00bcd0fc90241746404e051070b278ac0351e5c8873ffda8b39 AS builder
 LABEL project=trusted-cluster-operator
@@ -24,6 +26,12 @@ RUN /detector.sh ./Containerfile /drift-cache/Containerfile
 
 WORKDIR /build
 COPY operator/Makefile operator/Cargo.toml operator/Cargo.lock operator/go.mod operator/go.sum ./
+
+# cachi2/hermeto injects the vendored-sources cargo config at operator/.cargo during the
+# prefetch step. The build flattens operator/ into /build, so copy the config here too;
+# without it, offline (hermetic) `cargo build`/`cargo install` can't resolve the vendored
+# crates (incl. the git deps) and the build fails.
+COPY operator/.cargo .cargo
 
 COPY operator/api api
 COPY operator/lib lib
@@ -42,6 +50,18 @@ RUN sed -i 's/members = .*/members = ["lib", "operator", "compute-pcrs", "regist
     sed -i '/\[dev-dependencies\]/,$d' operator/Cargo.toml && \
     sed -i '/\[dev-dependencies\]/,$d' register-server/Cargo.toml && \
     sed -i '/trusted-cluster-operator-test-utils/d' lib/Cargo.toml
+
+# Copy controller-gen from the Konflux operator-sdk builder image. The upstream
+# Makefile expects the v0.20.1 filename from go.mod.
+RUN mkdir -p /build/bin
+COPY --from=operator-sdk /bin/controller-gen /build/bin/controller-gen-v0.20.1
+
+# Build pinned kopium source using dependencies fetched by Hermeto. Keep kopium's
+# injected .cargo/config.toml with its sources so Cargo uses the vendored crates.
+COPY tools/kopium /build-tools/kopium
+RUN cd /build-tools/kopium && \
+    cargo build --release --locked --offline && \
+    cp target/release/kopium /build/bin/kopium-0.23.0
 
 RUN make crds-rs
 
@@ -129,10 +149,10 @@ ENTRYPOINT ["/usr/bin/register-server"]
 
 
 FROM builder AS compute-pcrs-data
-# Pin reference-values to specific commit for reproducible builds
-ARG REFERENCE_VALUES_COMMIT=e296603ca106908258ac59326b001b602ed0f037
-RUN git clone https://github.com/trusted-execution-clusters/reference-values && \
-    cd reference-values && git checkout ${REFERENCE_VALUES_COMMIT} && cd ..
+# reference-values is vendored as a git submodule (pinned commit), fetched by the Konflux
+# git-clone task and copied from the build context. This replaces an in-build `git clone`,
+# which cannot run under hermetic (network-isolated) builds.
+COPY reference-values reference-values
 RUN mkdir -p /output/reference-values && \
     mv /build/reference-values/efivars /output/reference-values/ && \
     mv /build/reference-values/mok-variables /output/reference-values/
