@@ -56,6 +56,7 @@ jobs:
       - name: "gofmt (check)"
         run: if [ -n "$(gofmt -l .)" ]; then exit 1; fi
       - name: "go vet"
+        working-directory: ./operator
         run: go vet ./...
       - name: "Ensure clean Cargo.lock"
         run: sh -c '[ -z "$(git diff)" ]'
