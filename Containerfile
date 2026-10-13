@@ -78,7 +78,8 @@ COPY --from=builder /output/operator /usr/bin
 
 # Red Hat labels
 LABEL vendor="Red Hat, Inc." \
-      name="confidential-clusters-beta/confidential-cluster-operator" \
+      name="confidential-clusters-beta/confidential-cluster-rhel9-operator" \
+      cpe="cpe:/a:redhat:confidential_cluster_operator:4.21::el9" \
       version="0.2.1" \
       release="1" \
       description="confidential cluster operator - manages confidential computing resources on OpenShift" \
@@ -95,7 +96,8 @@ FROM ${deployment_base} AS attestation-key-register
 COPY --from=builder /output/attestation-key-register /usr/bin
 
 LABEL vendor="Red Hat, Inc." \
-      name="confidential-clusters-beta/attestation-key-register" \
+      name="confidential-clusters-beta/attestation-key-register-rhel9" \
+      cpe="cpe:/a:redhat:confidential_cluster_operator:4.21::el9" \
       version="0.2.1" \
       release="1" \
       description="Attestation key registration tool for confidential cluster operator" \
@@ -113,7 +115,8 @@ FROM ${deployment_base} AS register-server
 COPY --from=builder /output/register-server /usr/bin
 
 LABEL vendor="Red Hat, Inc." \
-      name="confidential-clusters-beta/registration-server" \
+      name="confidential-clusters-beta/registration-server-rhel9" \
+      cpe="cpe:/a:redhat:confidential_cluster_operator:4.21::el9" \
       version="0.2.1" \
       release="1" \
       description="Registration server for confidential cluster operator" \
@@ -142,7 +145,8 @@ COPY --from=compute-pcrs-data /output/compute-pcrs /usr/bin
 COPY --from=compute-pcrs-data /output/reference-values /reference-values
 
 LABEL vendor="Red Hat, Inc." \
-      name="confidential-clusters-beta/compute-pcrs" \
+      name="confidential-clusters-beta/compute-pcrs-rhel9" \
+      cpe="cpe:/a:redhat:confidential_cluster_operator:4.21::el9" \
       version="0.2.1" \
       release="1" \
       description="PCR computation tool for confidential cluster operator" \
